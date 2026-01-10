@@ -1,0 +1,42 @@
+name: Snowflake Deploy
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.10"
+
+      - name: Install Snowflake CLI
+        run: |
+          pip install snowflake-cli-labs
+
+      - name: Verify Snowflake CLI
+        run: snow --version
+
+      - name: Run SQL (TEMP CONNECTION)
+        env:
+          SNOWFLAKE_ACCOUNT: gqghqqm-df52783
+          SNOWFLAKE_USER: ${{ secrets.SNOWFLAKE_USER }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+        run: |
+          snow sql \
+            --temporary-connection \
+            --account "$SNOWFLAKE_ACCOUNT" \
+            --user "$SNOWFLAKE_USER" \
+            --password "$SNOWFLAKE_PASSWORD" \
+            --role SYSADMIN \
+            --warehouse COMPUTE_WH \
+            --database SCRIPT_DB \
+            --schema PUBLIC \
+            --query "SELECT CURRENT_USER(), CURRENT_ACCOUNT(), CURRENT_ROLE();"
